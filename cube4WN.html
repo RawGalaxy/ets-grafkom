@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Object Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        canvas {
+            border: 1px solid #000;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 800px;
+        }
+        #container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        #controls, #color-pickers {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            flex: 1;
+            width: fit-content;
+        }
+        #controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: fit-content;
+        }
+        #joystick {
+            display: grid;
+            grid-template-columns: repeat(3, 50px);
+            grid-gap: 5px;
+            margin-top: 10px;
+        }
+        button, select {
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        button:hover, select:hover {
+            background-color: #0056b3;
+        }
+        input[type="color"] {
+            margin: 5px;
+        }
+        h4 {
+            margin: 10px 0 5px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gl-canvas" width="1920" height="1080"></canvas>
+
+    <div id="container">
+        <!-- Controls untuk object dan rotasi -->
+        <div id="controls">
+            <select id="swap-object">
+                <option value="Cube">Cube</option>
+                <option value="Pyramid">Pyramid</option>
+                <option value="Octahedron">Octahedron</option>
+            </select>
+            <div id="joystick">
+                <button id="rotate-top-left">↖</button>
+                <button id="rotate-up">↑</button>
+                <button id="rotate-top-right">↗</button>
+                <button id="rotate-left">←</button>
+                <button id="rotate-center">•</button>
+                <button id="rotate-right">→</button>
+                <button id="rotate-bottom-left">↙</button>
+                <button id="rotate-down">↓</button>
+                <button id="rotate-bottom-right">↘</button>
+            </div>
+        </div>
+
+        <!-- Color pickers  -->
+        <div id="color-pickers">
+            <h4>Cube Colors:</h4>
+            <input type="color" id="cube-color-0" value="#000000">
+            <input type="color" id="cube-color-1" value="#ff0000">
+            <input type="color" id="cube-color-2" value="#ffff00">
+            <input type="color" id="cube-color-3" value="#00ff00">
+            <input type="color" id="cube-color-4" value="#0000ff">
+            <input type="color" id="cube-color-5" value="#ff00ff">
+            
+            <h4>Pyramid Colors:</h4>
+            <input type="color" id="pyramid-color-0" value="#000000">
+            <input type="color" id="pyramid-color-1" value="#ff0000">
+            <input type="color" id="pyramid-color-2" value="#ffff00">
+            <input type="color" id="pyramid-color-3" value="#00ff00">
+            
+            <h4>Octahedron Colors:</h4>
+            <input type="color" id="octahedron-color-0" value="#000000">
+            <input type="color" id="octahedron-color-1" value="#ff0000">
+            <input type="color" id="octahedron-color-2" value="#ffff00">
+            <input type="color" id="octahedron-color-3" value="#00ff00">
+            <br><br>
+            <button id="set-color">Set Object Color</button>
+        </div>
+        <div id="speed">
+            <div id="controls">
+            <h4>Speed:</h4>
+                <input type="range" id="speed" min="0.01" max="0.1" step="0.01" value="0.01">
+                <br>
+                <div id="speed-display">Current Speed: <span id="current-speed">0.01</span></div>
+                <button id="move-right">→</button>
+                <button id="move-left">←</button>
+            </div>
+        </div>
+        <!-- <div class="scale">
+            <h4>Scale:</h4>
+            <div id="controls">
+                <label for="scale">Scale:</label>
+                <input type="range" id="scale" min="0.1" max="2" step="0.1" value="1">
+            </div>
+        </div> -->
+    </div>
+
+    <script id="vertex-shader" type="x-shader/x-vertex">
+        #version 300 es
+        
+        in vec4 aPosition;
+        in vec4 aColor;
+        out vec4 vColor;
+        
+        uniform vec3 uTheta;
+
+        uniform mat4 uModelViewMatrix;
+        
+        void main() {
+            vec3 angles = radians(uTheta);
+            vec3 c = cos(angles);
+            vec3 s = sin(angles);
+        
+            // Remember: these matrices are column-major
+            mat4 rx = mat4(1.0,  0.0,  0.0, 0.0,
+                           0.0,  c.x,  s.x, 0.0,
+                           0.0, -s.x,  c.x, 0.0,
+                           0.0,  0.0,  0.0, 1.0);
+        
+            mat4 ry = mat4(c.y, 0.0, -s.y, 0.0,
+                           0.0, 1.0,  0.0, 0.0,
+                           s.y, 0.0,  c.y, 0.0,
+                           0.0, 0.0,  0.0, 1.0);
+        
+            vColor = aColor;  // Pass the color to the fragment shader
+            gl_Position = uModelViewMatrix * rx * ry * aPosition;
+            gl_Position.z = -gl_Position.z;
+        }
+    </script>
+        
+    <script id="fragment-shader" type="x-shader/x-fragment">
+        #version 300 es
+        
+        precision mediump float;
+        
+        in vec4 vColor;
+        out vec4 fColor;
+        
+        void main() {
+            fColor = vColor;  // Use the color passed from the vertex shader
+        }
+    </script>
+
+    <script src="initShaders.js"></script>
+    <script src="MVnew.js"></script>
+    <script src="cube4WN.js"></script>
+
+    <script>
+        document.getElementById("swap-object").addEventListener("change", function() {
+            var selectedObject = this.value;
+            if (selectedObject === "Cube") {
+                setupCube();
+            } else if (selectedObject === "Pyramid") {
+                setupPyramid();
+            } else if (selectedObject === "Octahedron") {
+                setupOctahedron();
+            }
+            updateBuffers();
+        });
+    </script>
+</body>
+</html>
