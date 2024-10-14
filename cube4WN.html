@@ -18,7 +18,7 @@
             border: 1px solid #000;
             margin-bottom: 20px;
             width: 100%;
-            max-width: 800px;
+            max-width: 1920px;
         }
         #container {
             display: flex;
@@ -35,7 +35,7 @@
             width: fit-content;
         }
         #controls {
-            display: flex;
+            display: absolute;
             flex-direction: column;
             align-items: center;
             width: fit-content;
@@ -68,7 +68,7 @@
     </style>
 </head>
 <body>
-    <canvas id="gl-canvas" width="1920" height="1080"></canvas>
+    <canvas id="gl-canvas" width="1920" height="500"></canvas>
 
     <div id="container">
         <!-- Controls untuk object dan rotasi -->
@@ -118,11 +118,11 @@
         <div id="speed">
             <div id="controls">
             <h4>Speed:</h4>
-                <input type="range" id="speed" min="0.01" max="0.1" step="0.01" value="0.01">
+                <input type="range" id="speed" min="0.00" max="0.1" step="0.01" value="0.01">
                 <br>
                 <div id="speed-display">Current Speed: <span id="current-speed">0.01</span></div>
-                <button id="move-right">→</button>
                 <button id="move-left">←</button>
+                <button id="move-right">→</button>
             </div>
         </div>
         <!-- <div class="scale">
